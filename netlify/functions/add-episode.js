@@ -5,7 +5,7 @@ exports.handler = async (event) => {
 
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
   const GITHUB_REPO = process.env.GITHUB_REPO; // e.g. "yourusername/family-podcast"
-  const FILE_PATH = 'episodes.json';
+  const FILE_PATH = 'public/episodes.json';
   const API_BASE = `https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`;
 
   try {
