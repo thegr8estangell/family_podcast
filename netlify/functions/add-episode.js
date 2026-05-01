@@ -4,22 +4,24 @@ exports.handler = async (event) => {
   }
 
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-  const GITHUB_REPO = process.env.GITHUB_REPO; // e.g. "yourusername/family-podcast"
+  const GITHUB_REPO = process.env.GITHUB_REPO;
   const FILE_PATH = 'public/episodes.json';
   const API_BASE = `https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`;
+
+  console.log('GITHUB_REPO:', GITHUB_REPO);
+  console.log('FILE_PATH:', FILE_PATH);
+  console.log('API_BASE:', API_BASE);
+  console.log('TOKEN exists:', !!GITHUB_TOKEN);
 
   try {
     const newEpisode = JSON.parse(event.body);
 
-    // Validate required fields
     if (!newEpisode.number || !newEpisode.date || !newEpisode.title || !newEpisode.description || !newEpisode.audioUrl) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Missing required fields' }) };
     }
 
-    // Convert Google Drive URL if needed
     newEpisode.audioUrl = convertGoogleDriveUrl(newEpisode.audioUrl);
 
-    // 1. Fetch current episodes.json from GitHub
     const getRes = await fetch(API_BASE, {
       headers: {
         Authorization: `Bearer ${GITHUB_TOKEN}`,
@@ -27,17 +29,19 @@ exports.handler = async (event) => {
       },
     });
 
+    console.log('GET status:', getRes.status);
+    const getData = await getRes.json();
+    console.log('GET response:', JSON.stringify(getData).slice(0, 200));
+
     let episodes = [];
     let sha = null;
 
     if (getRes.ok) {
-      const data = await getRes.json();
-      sha = data.sha;
-      const decoded = Buffer.from(data.content, 'base64').toString('utf8');
+      sha = getData.sha;
+      const decoded = Buffer.from(getData.content, 'base64').toString('utf8');
       episodes = JSON.parse(decoded);
     }
 
-    // 2. Add new episode at the top
     episodes.unshift({
       number: parseInt(newEpisode.number),
       date: newEpisode.date,
@@ -47,7 +51,6 @@ exports.handler = async (event) => {
       publishedAt: new Date().toISOString(),
     });
 
-    // 3. Write updated episodes.json back to GitHub
     const body = {
       message: `Add episode ${newEpisode.number}: ${newEpisode.title}`,
       content: Buffer.from(JSON.stringify(episodes, null, 2)).toString('base64'),
@@ -64,9 +67,12 @@ exports.handler = async (event) => {
       body: JSON.stringify(body),
     });
 
+    console.log('PUT status:', putRes.status);
+    const putData = await putRes.json();
+    console.log('PUT response:', JSON.stringify(putData).slice(0, 200));
+
     if (!putRes.ok) {
-      const err = await putRes.json();
-      throw new Error(err.message || 'GitHub write failed');
+      throw new Error(putData.message || 'GitHub write failed');
     }
 
     return {
@@ -76,7 +82,7 @@ exports.handler = async (event) => {
     };
 
   } catch (err) {
-    console.error(err);
+    console.error('ERROR:', err.message);
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
