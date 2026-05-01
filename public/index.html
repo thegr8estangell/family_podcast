@@ -294,13 +294,8 @@
 
   const ADMIN_EMAILS = ['aleccangell@gmail.com', 'otherperson@gmail.com'];
 
-netlifyIdentity.on('login', user => {
-  netlifyIdentity.close();
-  showSite();
-  if (ADMIN_EMAILS.includes(user.email)) {
-    document.getElementById('admin-link').style.display = 'inline-block';
-  }
-});
+const ADMIN_EMAILS = ['aleccangell@gmail.com', 'admin2@placeholder.com'];
+   netlifyIdentity.on('login', user => { netlifyIdentity.close(); showSite(); if (ADMIN_EMAILS.includes(user.email)) { document.getElementById('admin-link').style.display = 'inline-block'; } });
   netlifyIdentity.on('logout', showGate);
   netlifyIdentity.on('init', user => { user ? showSite() : showGate(); });
 
