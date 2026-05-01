@@ -263,6 +263,7 @@
       <div class="masthead-sub">The Life of Gary Angell in his own words.</div>
     </div>
     <button id="logout-btn">Sign Out</button>
+<a id="admin-link" href="/podcast-admin.html" style="display:none; font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); text-decoration:none; border:1px solid var(--rule); padding:0.45rem 1rem; font-family:'Source Serif 4',serif;">Admin</a>
   </header>
 
   <main>
@@ -291,7 +292,15 @@
   document.getElementById('login-btn').addEventListener('click', () => netlifyIdentity.open());
   document.getElementById('logout-btn').addEventListener('click', () => netlifyIdentity.logout());
 
-  netlifyIdentity.on('login', () => { netlifyIdentity.close(); showSite(); });
+  const ADMIN_EMAILS = ['aleccangell@gmail.com', 'otherperson@gmail.com'];
+
+netlifyIdentity.on('login', user => {
+  netlifyIdentity.close();
+  showSite();
+  if (ADMIN_EMAILS.includes(user.email)) {
+    document.getElementById('admin-link').style.display = 'inline-block';
+  }
+});
   netlifyIdentity.on('logout', showGate);
   netlifyIdentity.on('init', user => { user ? showSite() : showGate(); });
 
